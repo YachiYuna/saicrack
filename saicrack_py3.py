@@ -1,8 +1,17 @@
 import os, io, shutil, time, re, struct
 
+# Force the script to look inside its own directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
 def replaceN():
 	# open sai2.exe and find N
-	fsai2 = io.FileIO("sai2.exe", 'r+')
+	try:
+		fsai2 = io.FileIO("sai2.exe", 'r+')
+	except FileNotFoundError:
+		print("Error: Could not open sai2.exe for writing. Make sure the file is in this folder and not set to read-only.")
+		return False
+		
 	content = fsai2.read()
 	pos = content.find(b"\x83\xB0\xBC\x5C\xD1\x61\xAE\x1E\x3A\x64\x68\x7C\x41\x6D\xB3\x22\x48\x87\xBB\x18\xD7\x2B\xCA\xB0\x89\xCF\xC2\xC6\x5C\x2E\xBB\xCF\x45\x22\x3A\x86\x9C\x86\xA7\xCB\xA9\x05\x84\x0D\xC0\xFA\x0D\x5C\x03\xE7\xBA\x00\x96\x32\x96\xEC\x50\xA5\xBD\xAD\xEF\xFF\xA2\x94\xEC\x1F\xF9\x0E\x39\xA2\x3D\x21\x16\xD7\x61\x85\xDD\x96\x65\xCB\x77\xB4\xFE\x1C\x28\x63\x2F\x75\x74\x2C\x1D\xDB\xC0\x83\xBD\x05\xD8\x9A\x15\xD1\xAF\x1B\xAA\xAE\xB0\xBE\x4C\x17\xC1\xFD\x28\x40\x8C\xD6\xB6\xB7\x8A\x86\xA7\x66\x57\x6A\xFF\xEA\xA7\xDF\x2E\xBF")
 	# no known N is found
@@ -16,7 +25,6 @@ def replaceN():
 	fsai2.write(b"\x09\x0A\xE8\x4E\x68\x96\x88\x02\x86\x2F\x9E\x29\x45\xE5\xF5\x0D\x8B\x14\x20\x5C\xA1\xD7\xC8\x11\x4E\xE1\x71\xBC\xDA\x92\x61\x15\xE1\x90\x81\x2F\x12\xB2\xDF\xBE\x78\x60\x92\xAC\x7F\x9A\x05\x0F\xA9\x76\x98\x2F\x91\x47\xE9\xFC\xEE\xD4\x44\xF1\x60\x8D\xE2\x13\x4C\x60\xF4\xE6\x37\x68\xF4\xC7\xA0\xD6\x02\xEA\x9D\x92\xEE\x39\x64\x6F\xA6\x29\x85\x9D\x64\x6C\x66\xBA\xA4\xDC\x59\x25\xBD\x35\xAF\x38\x4F\x98\x82\xAD\xD2\xAD\x2D\x9A\xA4\xEE\xE8\x5D\x88\x49\x44\x7C\x1A\xCC\xDC\x9F\xB3\xDD\xC3\x69\x34\x3C\xEC\x82\x8F\x9B")
 	fsai2.close()
 
-
 	return True
 
 def create_license():
@@ -26,7 +34,7 @@ def create_license():
 
 		# len
 		if len(sysid) != 8:
-			print("System ID length must be 8 char, therwise unsupported.")
+			print("System ID length must be 8 char, otherwise unsupported.")
 			continue
         
 		# validate char
@@ -82,23 +90,20 @@ def create_license():
 
 
 def docrack():
-	# check if file is exist
+	# check if file exists
 	if not os.path.isfile("sai2.exe"):
-		print("sai2.exe doesn't exists.")
+		print(f"sai2.exe doesn't exist in current directory: {os.getcwd()}")
 		return False
 
 	# remove previous backup
 	for saifile in os.listdir("."):
-		# if not a file
 		if not os.path.isfile(saifile):
 			continue
 		
 		match = re.match(r"sai2.exe.[0-9]{10}.bak", saifile)
-		# do not match
 		if match is None:
 			continue
 		
-		# match whole
 		if match.group(0) == saifile:
 			try:
 				os.remove(saifile)
@@ -121,7 +126,6 @@ def docrack():
 
 	# create license
 	if create_license() is False:
-		# try to restore, do nothing if failed
 		try:
 			os.remove("sai2.exe")
 			os.rename(bakfile, "sai2.exe")
@@ -138,7 +142,6 @@ def docrack():
 
 	# replaceN
 	if replaceN() is False:
-		# try to restore, do nothing if failed
 		try:
 			os.remove("sai2.exe")
 			os.rename(bakfile, "sai2.exe")
@@ -156,9 +159,7 @@ if __name__ == '__main__':
 	ret = False
 	try:
 		try:
-			# info
-			print("Sai cracker ver 1.0.1\n")
-			# do crack
+			print("Sai cracker ver 1.0.2\n")
 			ret = docrack()
 		except Exception as e:
 			print(e)
@@ -171,5 +172,3 @@ if __name__ == '__main__':
 		else:
 			print("Crack failed!")
 	input("Press ENTER key to continue...")
-
-	# end of file
